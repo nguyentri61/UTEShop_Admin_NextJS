@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/header";
-import Navbar from "@/components/navbar";
+import Sidebar from "@/components/sidebar";
 
 export const metadata: Metadata = {
   icons: {
@@ -21,7 +21,7 @@ export default function RootLayout({
       <body className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
         <Header />
         <div className="flex">
-          <Navbar />
+          <Sidebar />
           <main className="flex-1">{children}</main>
         </div>
       </body>

@@ -1,5 +1,8 @@
 "use client";
 import React, { useMemo, useState } from "react";
+import userApiRequest from "@/apiRequest/user";
+import EditUserModal from "@/app/admin/users/_components/edit-users-table";
+import { toast } from "sonner";
 
 type User = {
   id: string;
@@ -15,25 +18,23 @@ type User = {
 export default function UsersTable({ initialUsers }: { initialUsers: User[] }) {
   const [users, setUsers] = useState<User[]>(initialUsers || []);
   const [query, setQuery] = useState("");
-  const [roleFilter, setRoleFilter] = useState<"" | "USER" | "ADMIN">("");
   const [page, setPage] = useState(1);
+  const [editingUser, setEditingUser] = useState<User | null>(null); // State để lưu user đang chỉnh sửa
+  const [isModalOpen, setIsModalOpen] = useState(false); // State để điều khiển modal
   const perPage = 10;
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return users.filter((u) => {
-      const matchQuery =
+      return (
         !q ||
         u.email.toLowerCase().includes(q) ||
         (u.fullName || "").toLowerCase().includes(q) ||
         (u.phone || "").toLowerCase().includes(q) ||
-        u.id.toLowerCase().includes(q);
-
-      const matchRole = !roleFilter || u.role === roleFilter;
-
-      return matchQuery && matchRole;
+        u.id.toLowerCase().includes(q)
+      );
     });
-  }, [users, query, roleFilter]);
+  }, [users, query]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const pageData = filtered.slice((page - 1) * perPage, page * perPage);
@@ -46,12 +47,45 @@ export default function UsersTable({ initialUsers }: { initialUsers: User[] }) {
     if (!confirm(`Bạn có chắc muốn ${action} người dùng ${user.email}?`))
       return;
 
-    // TODO: Replace with real API call
-    // await userApiRequest.toggleBlock(id);
+    try {
+      // Gọi API block/unblock user
+      await userApiRequest.blockUser(id, !user.blocked);
 
-    setUsers((prev) =>
-      prev.map((u) => (u.id === id ? { ...u, blocked: !u.blocked } : u))
-    );
+      // Cập nhật trạng thái trong state
+      setUsers((prev) =>
+        prev.map((u) => (u.id === id ? { ...u, blocked: !u.blocked } : u))
+      );
+
+      toast.success(`Đã ${action} người dùng ${user.email}`);
+    } catch (error) {
+      console.error("Lỗi khi cập nhật trạng thái block:", error);
+      toast.error("Không thể cập nhật trạng thái block. Vui lòng thử lại.");
+    }
+  }
+
+  async function handleEditUser(updatedUser: User) {
+    try {
+      // Gọi API cập nhật thông tin user
+      // map nullable fields to non-nullable strings and convert gender to optional value
+      await userApiRequest.updateUser(updatedUser.id, {
+        fullName: updatedUser.fullName || "",
+        address: updatedUser.address || "",
+        phone: updatedUser.phone || "",
+        gender:
+          (updatedUser.gender as "MALE" | "FEMALE" | "OTHER") || undefined,
+      });
+
+      // Cập nhật thông tin user trong state
+      setUsers((prev) =>
+        prev.map((u) => (u.id === updatedUser.id ? updatedUser : u))
+      );
+
+      toast.success("Cập nhật thông tin người dùng thành công!");
+      setIsModalOpen(false); // Đóng modal sau khi cập nhật thành công
+    } catch (error) {
+      console.error("Lỗi khi cập nhật thông tin người dùng:", error);
+      toast.error("Không thể cập nhật thông tin người dùng. Vui lòng thử lại.");
+    }
   }
 
   return (
@@ -67,18 +101,6 @@ export default function UsersTable({ initialUsers }: { initialUsers: User[] }) {
             placeholder="Tìm theo email, tên, phone hoặc id..."
             className="flex-1 bg-white dark:bg-slate-900 border rounded-md px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          <select
-            value={roleFilter}
-            onChange={(e) => {
-              setRoleFilter(e.target.value as any);
-              setPage(1);
-            }}
-            className="bg-white dark:bg-slate-900 border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Tất cả vai trò</option>
-            <option value="USER">USER</option>
-            <option value="ADMIN">ADMIN</option>
-          </select>
         </div>
 
         <div className="flex items-center gap-2">
@@ -194,10 +216,13 @@ export default function UsersTable({ initialUsers }: { initialUsers: User[] }) {
                         {u.blocked ? "Mở chặn" : "Chặn"}
                       </button>
                       <button
-                        onClick={() => alert(`Xem chi tiết: ${u.email}`)}
+                        onClick={() => {
+                          setEditingUser(u); // Lưu user đang chỉnh sửa
+                          setIsModalOpen(true); // Mở modal
+                        }}
                         className="text-xs px-3 py-1.5 rounded-md border border-slate-200 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800 font-medium transition-colors"
                       >
-                        Chi tiết
+                        Chỉnh sửa
                       </button>
                     </div>
                   </td>
@@ -237,6 +262,15 @@ export default function UsersTable({ initialUsers }: { initialUsers: User[] }) {
           </button>
         </div>
       </div>
+
+      {/* Modal chỉnh sửa thông tin user */}
+      {isModalOpen && editingUser && (
+        <EditUserModal
+          user={editingUser}
+          onClose={() => setIsModalOpen(false)}
+          onSave={handleEditUser}
+        />
+      )}
     </div>
   );
 }

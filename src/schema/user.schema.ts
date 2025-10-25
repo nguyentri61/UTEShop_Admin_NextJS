@@ -1,6 +1,7 @@
 import z from "zod";
 
 export const UserRoleEnum = z.enum(["USER", "ADMIN"]);
+export const UserGenderEnum = z.enum(["MALE", "FEMALE", "OTHER"]);
 
 export const UserSchema = z.object({
   id: z.string(),
@@ -12,6 +13,7 @@ export const UserSchema = z.object({
   address: z.string().nullable(),
   blocked: z.boolean(),
 });
+export type UserType = z.TypeOf<typeof UserSchema>;
 
 export const UserRes = z.object({
   status: z.number(),
@@ -20,3 +22,11 @@ export const UserRes = z.object({
 });
 
 export type UserResType = z.TypeOf<typeof UserRes>;
+
+export const UpdateUserRequest = z.object({
+  fullName: z.string(),
+  address: z.string(),
+  phone: z.string(),
+  gender: UserGenderEnum.optional(),
+});
+export type UpdateUserRequestType = z.TypeOf<typeof UpdateUserRequest>;

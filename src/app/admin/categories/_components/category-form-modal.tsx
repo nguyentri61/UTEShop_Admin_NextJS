@@ -24,10 +24,8 @@ import categoryApiRequest from "@/apiRequest/category";
 import {
   CreateCategoryBody,
   CreateCategoryBodyType,
-  CategoryResType,
 } from "@/schema/category.schema";
-import Image from "next/image";
-import { ImageOff, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface CategoryFormModalProps {
   category: CategoryResType | null; // null = Create mode, có data = Edit mode
@@ -43,14 +41,13 @@ export default function CategoryFormModal({
   onSuccess,
 }: CategoryFormModalProps) {
   const [loading, setLoading] = useState(false);
-  const [iconPreview, setIconPreview] = useState<string | null>(null);
+  const [name, setName] = useState(category?.name || "");
   const isEditMode = !!category;
 
   const form = useForm<CreateCategoryBodyType>({
     resolver: zodResolver(CreateCategoryBody),
     defaultValues: {
       name: "",
-      icon: "",
     },
   });
 
@@ -59,26 +56,28 @@ export default function CategoryFormModal({
       // Edit mode
       form.reset({
         name: category.name,
-        icon: category.icon || "",
       });
-      setIconPreview(category.icon);
+      setName(category.name);
     } else {
       // Create mode
       form.reset({
         name: "",
-        icon: "",
       });
-      setIconPreview(null);
+      setName("");
     }
   }, [category, form]);
 
   const onSubmit = async (data: CreateCategoryBodyType) => {
+    if (!name.trim()) {
+      toast.error("Tên danh mục không được để trống");
+      return;
+    }
+
     try {
       setLoading(true);
 
       const body = {
         name: data.name,
-        ...(data.icon && { icon: data.icon }),
       };
 
       if (isEditMode) {
@@ -102,10 +101,6 @@ export default function CategoryFormModal({
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleIconChange = (value: string) => {
-    setIconPreview(value || null);
   };
 
   const handleClose = () => {
@@ -138,55 +133,14 @@ export default function CategoryFormModal({
                       placeholder="Nhập tên danh mục"
                       {...field}
                       disabled={loading}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
-            <FormField
-              control={form.control}
-              name="icon"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>URL Icon</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="https://example.com/icon.png"
-                      {...field}
-                      disabled={loading}
-                      onChange={(e) => {
-                        field.onChange(e);
-                        handleIconChange(e.target.value);
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {iconPreview && (
-              <div>
-                <FormLabel>Preview Icon</FormLabel>
-                <div className="mt-2 relative w-24 h-24 rounded-lg overflow-hidden border">
-                  <Image
-                    src={"/categories.png"}
-                    alt="Icon preview"
-                    fill
-                    className="object-cover"
-                    onError={() => setIconPreview(null)}
-                  />
-                </div>
-              </div>
-            )}
-
-            {!iconPreview && form.watch("icon") && (
-              <div className="mt-2 w-24 h-24 rounded-lg border flex items-center justify-center bg-muted">
-                <ImageOff className="h-8 w-8 text-muted-foreground" />
-              </div>
-            )}
 
             <div className="flex gap-4 pt-4">
               <Button type="submit" disabled={loading} className="flex-1">

@@ -6,10 +6,12 @@ import {
   ProductResponseDtoType,
   ProductListResponseDtoType,
 } from "@/schema/product.schema";
+import { ApiResponseType } from "@/schema/product.schema";
 
 const productApi = {
   create: (body: CreateProductDtoType) =>
-    http.post<ProductResponseDtoType>("/products", body),
+    http.post<ApiResponseType<ProductResponseDtoType>>("/products", body),
+
   list: (params?: Record<string, any>) => {
     // Loại bỏ undefined / null / empty string và map tên param nếu cần
     const filteredParams = Object.entries(params || {}).reduce<
@@ -27,16 +29,27 @@ const productApi = {
         ? "?" + new URLSearchParams(filteredParams).toString()
         : "";
 
-    return http.get<PaginatedProductResponseDtoType>(`/products${qs}`);
+    return http.get<ApiResponseType<PaginatedProductResponseDtoType>>(
+      `/products${qs}`
+    );
   },
-  detail: (id: string) => http.get<ProductResponseDtoType>(`/products/${id}`),
+
+  detail: (id: string) =>
+    http.get<ApiResponseType<ProductResponseDtoType>>(`/products/${id}`),
+
   update: (id: string, body: UpdateProductDtoType) =>
-    http.put<ProductResponseDtoType>(`/products/${id}`, body),
-  remove: (id: string) => http.delete<void>(`/products/${id}`, undefined),
+    http.put<ApiResponseType<ProductResponseDtoType>>(`/products/${id}`, body),
+
+  remove: (id: string) =>
+    http.delete<ApiResponseType<null>>(`/products/${id}`, undefined),
+
   patchStock: (id: string, quantity: number) =>
-    http.put<ProductResponseDtoType>(`/products/${id}/stock`, { quantity }),
+    http.put<ApiResponseType<ProductResponseDtoType>>(`/products/${id}/stock`, {
+      quantity,
+    }),
+
   checkStock: (id: string, quantity: number) =>
-    http.get<{ available: boolean; stock: number }>(
+    http.get<ApiResponseType<{ available: boolean; stock: number }>>(
       `/products/${id}/check-stock?quantity=${quantity}`
     ),
 };

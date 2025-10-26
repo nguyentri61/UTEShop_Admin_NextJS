@@ -206,6 +206,15 @@ export default function UsersTable({ initialUsers }: { initialUsers: User[] }) {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <button
+                        onClick={() => {
+                          setEditingUser(u); // Lưu user đang chỉnh sửa
+                          setIsModalOpen(true); // Mở modal
+                        }}
+                        className="text-xs px-3 py-1.5 rounded-md border border-slate-200 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800 font-medium transition-colors"
+                      >
+                        Chỉnh sửa
+                      </button>
+                      <button
                         onClick={() => toggleBlock(u.id)}
                         className={`text-xs px-3 py-1.5 rounded-md font-medium transition-colors ${
                           u.blocked
@@ -214,15 +223,6 @@ export default function UsersTable({ initialUsers }: { initialUsers: User[] }) {
                         }`}
                       >
                         {u.blocked ? "Mở chặn" : "Chặn"}
-                      </button>
-                      <button
-                        onClick={() => {
-                          setEditingUser(u); // Lưu user đang chỉnh sửa
-                          setIsModalOpen(true); // Mở modal
-                        }}
-                        className="text-xs px-3 py-1.5 rounded-md border border-slate-200 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800 font-medium transition-colors"
-                      >
-                        Chỉnh sửa
                       </button>
                     </div>
                   </td>

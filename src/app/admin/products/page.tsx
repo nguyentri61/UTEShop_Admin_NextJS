@@ -4,32 +4,31 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import productApi from "@/apiRequest/product";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import ProductTable from "@/app/admin/products/_components/product-table";
-import ProductFormModal from "@/app/admin/products/_components/product-form-modal";
 import { PaginatedProductResponseDtoType } from "@/schema/product.schema";
+import CreateProductButton from "@/app/admin/products/_components/create-product-button";
 
 export default function ProductsPage() {
   const router = useRouter();
 
-  const [page, setPage] = useState(1);
-  const [limit] = useState(10);
-  const [search, setSearch] = useState("");
-  const [categoryId, setCategoryId] = useState<string | undefined>(undefined);
-  const [sort, setSort] = useState<string | undefined>(undefined);
+  const [page, setPage] = useState(1); // Trang hiện tại
+  const [limit] = useState(10); // Số sản phẩm trên mỗi trang
+  const [search, setSearch] = useState(""); // Tìm kiếm
+  const [categoryId, setCategoryId] = useState<string | undefined>(undefined); // Lọc theo danh mục
+  const [sort, setSort] = useState<string | undefined>(undefined); // Sắp xếp
 
-  const [showCreate, setShowCreate] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // Trạng thái tải dữ liệu
   const [paginated, setPaginated] =
-    useState<PaginatedProductResponseDtoType | null>(null);
+    useState<PaginatedProductResponseDtoType | null>(null); // Dữ liệu phân trang
 
-  const fetchProducts = async () => {
+  // Hàm lấy dữ liệu sản phẩm từ API
+  const fetchProducts = async (currentPage: number = page) => {
     setLoading(true);
     try {
       const r = await productApi.list({
-        page: String(page),
-        limit: String(limit),
+        page: String(currentPage), // Đảm bảo page là chuỗi
+        limit: String(limit), // Đảm bảo limit là chuỗi
         search,
         categoryId,
         sort,
@@ -41,9 +40,27 @@ export default function ProductsPage() {
         return;
       }
 
-      const payload = r.payload.data;
+      const payload = r.payload.data; // Dữ liệu trả về từ API
       console.log("Fetched products:", payload);
-      setPaginated(payload);
+
+      // Chuyển đổi meta.page và meta.limit thành số
+      const meta = {
+        ...payload?.meta,
+        page: Number(payload?.meta?.page), // Chuyển page thành số
+        limit: Number(payload?.meta?.limit), // Chuyển limit thành số
+        totalPages: Number(payload?.meta?.totalPages), // Chuyển totalPages thành số
+      };
+
+      // Cập nhật dữ liệu phân trang
+      setPaginated({
+        data: payload?.data,
+        meta,
+      });
+
+      // Đồng bộ page với meta.page từ backend
+      if (meta.page) {
+        setPage(meta.page); // Cập nhật page từ meta
+      }
     } catch (err: unknown) {
       toast.error("Lỗi kết nối");
       setPaginated(null);
@@ -52,8 +69,9 @@ export default function ProductsPage() {
     }
   };
 
+  // Gọi API khi các giá trị liên quan thay đổi
   useEffect(() => {
-    fetchProducts();
+    fetchProducts(page);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, limit, search, categoryId, sort]);
 
@@ -68,13 +86,11 @@ export default function ProductsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button onClick={() => setShowCreate(true)}>
-            <Plus className="mr-2 h-4 w-4" /> Thêm sản phẩm
-          </Button>
+          <CreateProductButton />
         </div>
       </div>
 
-      {/* filters */}
+      {/* Bộ lọc */}
       <div className="flex gap-2 mb-4">
         <input
           className="input"
@@ -82,35 +98,35 @@ export default function ProductsPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        {/* TODO: category select, price range, sort UI */}
+        {/* TODO: Thêm UI cho lọc danh mục, khoảng giá, sắp xếp */}
         <Button
           onClick={() => {
-            setPage(1);
-            fetchProducts();
+            setPage(1); // Đặt lại trang về 1 khi áp dụng bộ lọc
+            fetchProducts(1);
           }}
         >
           Áp dụng
         </Button>
       </div>
 
+      {/* Bảng sản phẩm */}
       <ProductTable
         loading={loading}
-        paginated={paginated}
-        onRefresh={() => {
-          fetchProducts();
-          router.refresh();
+        data={paginated?.data || []} // Truyền mảng rỗng nếu không có dữ liệu
+        meta={
+          paginated?.meta || {
+            total: 0,
+            page: Number(page), // Đảm bảo page là số
+            limit: Number(limit), // Đảm bảo limit là số
+            totalPages: 1,
+          }
+        }
+        onPageChange={(newPage) => {
+          if (newPage > 0 && newPage <= (paginated?.meta?.totalPages || 1)) {
+            fetchProducts(newPage); // Lấy dữ liệu cho trang mới
+          }
         }}
-        // optional: pass handlers to change page/sort from child
-      />
-
-      <ProductFormModal
-        open={showCreate}
-        onClose={() => setShowCreate(false)}
-        onSuccess={async () => {
-          setShowCreate(false);
-          await fetchProducts();
-          router.refresh();
-        }}
+        onRefresh={() => fetchProducts(page)} // Làm mới dữ liệu cho trang hiện tại
       />
     </div>
   );

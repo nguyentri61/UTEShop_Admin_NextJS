@@ -48,28 +48,11 @@ const items: NavItem[] = [
     href: "/admin/orders",
     label: "Đơn hàng",
     icon: <ShoppingCart className="w-5 h-5" />,
-    badge: 12,
   },
   {
-    href: "/admin/comments",
-    label: "Bình luận",
-    icon: <MessageSquare className="w-5 h-5" />,
-    badge: 5,
-  },
-  {
-    href: "/admin/promotions",
+    href: "/admin/coupons",
     label: "Khuyến mãi",
     icon: <Tag className="w-5 h-5" />,
-  },
-  {
-    href: "/admin/notifications",
-    label: "Thông báo",
-    icon: <Bell className="w-5 h-5" />,
-  },
-  {
-    href: "/admin/settings",
-    label: "Cài đặt",
-    icon: <Settings className="w-5 h-5" />,
   },
 ];
 

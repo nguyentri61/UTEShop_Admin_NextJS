@@ -10,8 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, ImageOff } from "lucide-react";
-import Image from "next/image";
+import { Pencil, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import categoryApiRequest from "@/apiRequest/category";
@@ -102,7 +101,6 @@ export default function CategoryTable() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-16">STT</TableHead>
-                <TableHead className="w-24">Icon</TableHead>
                 <TableHead>Tên danh mục</TableHead>
                 <TableHead className="w-48">Ngày tạo</TableHead>
                 <TableHead className="w-32 text-right">Hành động</TableHead>
@@ -111,7 +109,7 @@ export default function CategoryTable() {
             <TableBody>
               {categories.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
+                  <TableCell colSpan={4} className="text-center py-8">
                     <p className="text-muted-foreground">
                       Chưa có danh mục nào
                     </p>
@@ -121,25 +119,7 @@ export default function CategoryTable() {
                 categories.map((category, index) => (
                   <TableRow key={category.id}>
                     <TableCell className="font-medium">{index + 1}</TableCell>
-                    <TableCell>
-                      {category.icon ? (
-                        <div className="relative w-12 h-12 rounded-md overflow-hidden border">
-                          <Image
-                            src={"/categories.png"}
-                            alt={category.name}
-                            fill
-                            className="object-cover"
-                            onError={(e) => {
-                              e.currentTarget.src = "/placeholder-image.png";
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-12 h-12 rounded-md border flex items-center justify-center bg-muted">
-                          <ImageOff className="h-5 w-5 text-muted-foreground" />
-                        </div>
-                      )}
-                    </TableCell>
+                    {/* Bỏ cột Icon */}
                     <TableCell className="font-medium">
                       {category.name}
                     </TableCell>

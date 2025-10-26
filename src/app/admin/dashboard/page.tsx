@@ -143,31 +143,30 @@ const mockData = {
   ],
 };
 
+const StatusBadge = ({ status }: { status: string }) => {
+  const styles = {
+    Completed:
+      "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
+    Pending:
+      "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
+    Processing: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
+    Shipped:
+      "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
+  };
+  return (
+    <span
+      className={`px-3 py-1 rounded-full text-xs font-semibold ${
+        styles[status] || "bg-gray-100 text-gray-700"
+      }`}
+    >
+      {status}
+    </span>
+  );
+};
+
 const Dashboard = () => {
   const { stats, recentOrders, products, users, salesChart } = mockData;
   const [timeRange, setTimeRange] = useState("month");
-
-  const StatusBadge = ({ status }) => {
-    const styles = {
-      Completed:
-        "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
-      Pending:
-        "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
-      Processing:
-        "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
-      Shipped:
-        "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
-    };
-    return (
-      <span
-        className={`px-3 py-1 rounded-full text-xs font-semibold ${
-          styles[status] || "bg-gray-100 text-gray-700"
-        }`}
-      >
-        {status}
-      </span>
-    );
-  };
 
   const maxSales = Math.max(...salesChart.map((d) => d.sales));
 
